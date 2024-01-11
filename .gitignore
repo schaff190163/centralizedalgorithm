@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -182,3 +183,6 @@ docs/_build/
 # PyInstaller
 build/
 dist/
+=======
+venv
+>>>>>>> f224aa77504cbb872588962d92110b183a67058d
