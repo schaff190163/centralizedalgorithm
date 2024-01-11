@@ -1,12 +1,13 @@
 import socket
 import threading
+import queue
 
 class CentralizedCoordinator:
     def __init__(self, host, port):
         self.host = host
         self.port = port
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.request_queue = []
+        self.request_queue = queue.Queue()
         self.shared_resource_lock = threading.Lock()
         self.client_id_counter = 1
         self.client_id_map = {}
@@ -22,8 +23,7 @@ class CentralizedCoordinator:
             client_id = self.assign_client_id(client_socket)
             print(f"Connection established with {client_address}, Client ID: {client_id}")
 
-            client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_id))
-            client_thread.start()
+            self.handle_client(client_socket, client_id)
 
     def assign_client_id(self, client_socket):
         with self.shared_resource_lock:
@@ -50,20 +50,17 @@ class CentralizedCoordinator:
 
     def handle_access_request(self, client_socket, client_id):
         with self.shared_resource_lock:
-            if not self.request_queue:
-                client_socket.sendall(f"ACCESS_GRANTED, Your ID: {client_id}".encode('utf-8'))
-            else:
-                self.request_queue.append((client_socket, client_id))
+            if not self.request_queue.empty():
+                self.request_queue.put((client_socket, client_id))
                 print(f"Client ID {client_id} added to the queue.")
                 client_socket.sendall("ACCESS_DENIED".encode('utf-8'))
+            else:
+                client_socket.sendall(f"ACCESS_GRANTED, Your ID: {client_id}".encode('utf-8'))
 
     def handle_release(self, client_socket, client_id):
         with self.shared_resource_lock:
-            if (client_socket, client_id) in self.request_queue:
-                self.request_queue.remove((client_socket, client_id))
-
-            if self.request_queue:
-                next_client, next_client_id = self.request_queue.pop(0)
+            if not self.request_queue.empty():
+                next_client, next_client_id = self.request_queue.get()
                 next_client.sendall(f"ACCESS_GRANTED, Your ID: {next_client_id}".encode('utf-8'))
             else:
                 print("No clients waiting for access.")
