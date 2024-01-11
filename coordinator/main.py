@@ -40,10 +40,12 @@ class CentralizedCoordinator:
         with self.shared_resource_lock:
             if not self.request_queue:
                 client_socket.sendall("GRANTED".encode('utf-8'))
+                print("Client was GRANTED!")
             else:
                 self.request_queue.append(client_socket)
                 client_socket.sendall("DENIED".encode('utf-8'))
+                print("Client is in queue!")
 
 if __name__ == "__main__":
-    coordinator = CentralizedCoordinator('127.0.0.1', 8080)
+    coordinator = CentralizedCoordinator('172.31.183.206', 8080)
     coordinator.start()
