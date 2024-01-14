@@ -52,16 +52,17 @@ class CentralizedCoordinator:
         with self.shared_resource_lock:
             if not self.request_queue.empty():
                 self.request_queue.put((client_socket, client_id))
-                print(f"Client ID {client_id} added to the queue.")
-                client_socket.sendall("ACCESS_DENIED".encode('utf-8'))
+                client_socket.sendall("DENIED".encode('utf-8'))
+                print("Client is in queue!")
             else:
-                client_socket.sendall(f"ACCESS_GRANTED, Your ID: {client_id}".encode('utf-8'))
+                client_socket.sendall("GRANTED".encode('utf-8'))
+                print("Client was GRANTED!")
 
     def handle_release(self, client_socket, client_id):
         with self.shared_resource_lock:
             if not self.request_queue.empty():
                 next_client, next_client_id = self.request_queue.get()
-                next_client.sendall(f"ACCESS_GRANTED, Your ID: {next_client_id}".encode('utf-8'))
+                next_client.sendall(f"GRANTED, Your ID: {next_client_id}".encode('utf-8'))
             else:
                 print("No clients waiting for access.")
 
